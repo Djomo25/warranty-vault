@@ -3,6 +3,7 @@ import { authGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
+
   {
     path: 'auth',
     children: [
@@ -19,11 +20,34 @@ export const routes: Routes = [
       { path: '', redirectTo: 'login', pathMatch: 'full' },
     ],
   },
+
   {
     path: 'dashboard',
     canActivate: [authGuard],
     loadComponent: () =>
       import('./features/dashboard/dashboard.component').then((m) => m.DashboardComponent),
   },
+
+  {
+    path: 'products',
+    canActivate: [authGuard],
+    children: [
+      {
+        path: 'new',
+        loadComponent: () =>
+          import('./features/products/product-form/product-form.component').then(
+            (m) => m.ProductFormComponent,
+          ),
+      },
+      {
+        path: ':id/edit',
+        loadComponent: () =>
+          import('./features/products/product-form/product-form.component').then(
+            (m) => m.ProductFormComponent,
+          ),
+      },
+    ],
+  },
+
   { path: '**', redirectTo: '/auth/login' },
 ];

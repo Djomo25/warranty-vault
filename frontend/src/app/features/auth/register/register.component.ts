@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -11,6 +11,9 @@ import { AuthService } from '../../../core/services/auth.service';
   templateUrl: './register.component.html',
 })
 export class RegisterComponent {
+  private fb = inject(FormBuilder);
+  private auth = inject(AuthService);
+
   form = this.fb.group({
     fullName: ['', [Validators.required, Validators.minLength(2)]],
     email: ['', [Validators.required, Validators.email]],
@@ -20,8 +23,6 @@ export class RegisterComponent {
   loading = signal(false);
   error = signal('');
 
-  constructor(private fb: FormBuilder, private auth: AuthService) {}
-
   submit() {
     if (this.form.invalid) return;
     this.loading.set(true);
@@ -30,7 +31,7 @@ export class RegisterComponent {
     const { email, password, fullName } = this.form.value;
     this.auth.register(email!, password!, fullName!).subscribe({
       error: (err) => {
-        this.error.set(err?.error?.message ?? 'Erreur lors de l\'inscription');
+        this.error.set(err?.error?.message ?? "Erreur lors de l'inscription");
         this.loading.set(false);
       },
     });

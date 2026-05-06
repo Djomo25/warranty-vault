@@ -1,0 +1,101 @@
+<div class="layout">
+
+  <header class="topbar">
+    <span class="topbar-brand">WarrantyVault</span>
+    <div class="topbar-user">
+      <span>{{ auth.user()?.fullName }}</span>
+      <button (click)="auth.logout()" class="btn-logout">Déconnexion</button>
+    </div>
+  </header>
+
+  <main class="main-content">
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <span class="stat-value">{{ stats().total }}</span>
+        <span class="stat-label">Produits</span>
+      </div>
+      <div class="stat-card stat-active">
+        <span class="stat-value">{{ stats().active }}</span>
+        <span class="stat-label">En garantie</span>
+      </div>
+      <div class="stat-card stat-expiring">
+        <span class="stat-value">{{ stats().expiring }}</span>
+        <span class="stat-label">Expirent bientôt</span>
+      </div>
+      <div class="stat-card stat-expired">
+        <span class="stat-value">{{ stats().expired }}</span>
+        <span class="stat-label">Expirées</span>
+      </div>
+    </div>
+
+    <!-- Header liste -->
+    <div class="list-header">
+      <h2 class="list-title">Mes garanties</h2>
+      <a routerLink="/products/new" class="btn-primary">+ Ajouter un produit</a>
+    </div>
+
+    <!-- États -->
+    @if (loading()) {
+      <div class="state-placeholder">Chargement…</div>
+    } @else if (error()) {
+      <p class="alert-error">{{ error() }}</p>
+    } @else if (products().length === 0) {
+      <div class="empty-state">
+        <p>Aucun produit enregistré.</p>
+        <a routerLink="/products/new" class="btn-primary">Ajouter mon premier produit</a>
+      </div>
+    } @else {
+
+      <!-- Table produits -->
+      <div class="table-wrapper">
+        <table class="products-table">
+          <thead>
+            <tr>
+              <th>Produit</th>
+              <th>Catégorie</th>
+              <th>Achat</th>
+              <th>Fin de garantie</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (product of products(); track product.id) {
+              <tr>
+                <td>
+                  <div class="product-name">{{ product.name }}</div>
+                  @if (product.brand) {
+                    <div class="product-sub">{{ product.brand }}{{ product.model ? ' · ' + product.model : '' }}</div>
+                  }
+                </td>
+                <td>
+                  <span class="category-tag">{{ product.category }}</span>
+                </td>
+                <td>{{ product.purchase_date | date:'dd/MM/yyyy' }}</td>
+                <td>{{ product.warranty_end | date:'dd/MM/yyyy' }}</td>
+                <td>
+                  <span class="status-badge status-{{ statusClass(product.warranty_end) }}">
+                    {{ statusLabel(product.warranty_end) }}
+                  </span>
+                </td>
+                <td class="actions-cell">
+                  <a [routerLink]="['/products', product.id, 'edit']" class="btn-icon" title="Modifier">✏️</a>
+                  <button
+                    class="btn-icon btn-danger"
+                    (click)="delete(product.id)"
+                    [disabled]="deletingId() === product.id"
+                    title="Supprimer"
+                  >🗑️</button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+    }
+
+  </main>
+</div>

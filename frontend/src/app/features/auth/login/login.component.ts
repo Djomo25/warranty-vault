@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -11,6 +11,9 @@ import { AuthService } from '../../../core/services/auth.service';
   templateUrl: './login.component.html',
 })
 export class LoginComponent {
+  private fb = inject(FormBuilder);
+  private auth = inject(AuthService);
+
   form = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(8)]],
@@ -18,8 +21,6 @@ export class LoginComponent {
 
   loading = signal(false);
   error = signal('');
-
-  constructor(private fb: FormBuilder, private auth: AuthService) {}
 
   submit() {
     if (this.form.invalid) return;
