@@ -19,44 +19,48 @@
 - Badges statut vert / orange / rouge selon jours restants
 - Formulaire ajout + édition produit (`/products/new`, `/products/:id/edit`)
 
-#### Qualité
-- Zéro erreur TypeScript frontend et backend
-- Commits atomiques avec messages conventionnels
+### Séance du 07/05/2026
+
+#### Upload de factures
+- Table SQL `invoices` avec RLS (liée à `products` et `auth.users`)
+- Bucket Supabase Storage `invoices` (privé, 10 Mo max, PDF/JPEG/PNG/WEBP) avec policies par `user_id`
+- 3 endpoints REST protégés JWT :
+  - `POST /api/products/:id/invoices` — upload multipart (memoryStorage, multer)
+  - `GET  /api/products/:id/invoices` — liste avec signed URLs (TTL 1h)
+  - `DELETE /api/invoices/:id`        — supprime DB + Storage (cleanup atomique)
+- `InvoiceUploadComponent` Angular : drag-and-drop, click-to-browse, prévisualisation image/PDF
+- Validation format + taille côté client ET backend
+- Intégré dans la fiche produit (mode édition uniquement)
+- Clé Google Vision API configurée dans `.env` ✅
 
 ---
 
 ## Ce qu'il faut faire ensuite
 
-### Priorité 1 — Upload de facture (Avril)
-- [ ] Configurer Supabase Storage (bucket `invoices`, policy par `user_id`)
-- [ ] Endpoint `POST /api/products/:id/invoice` : upload PDF/image vers Supabase Storage
-- [ ] Stocker l'URL dans `products.invoice_url`
-- [ ] Bouton "Joindre une facture" dans le formulaire produit (Angular)
-- [ ] Afficher un lien/aperçu de la facture dans le dashboard
-
-### Priorité 2 — OCR Google Vision API (Avril)
-- [ ] Créer un compte Google Cloud, activer Vision API, récupérer la clé
-- [ ] Ajouter `@google-cloud/vision` dans le backend
-- [ ] Endpoint `POST /api/products/ocr` : envoie l'image à Vision API, retourne le texte extrait
-- [ ] Algorithme de parsing : extraire nom du produit, date d'achat, montant
+### Priorité 1 — OCR Google Vision API ← À FAIRE MAINTENANT
+- [ ] Ajouter `@google-cloud/vision` dans le backend (utiliser la clé `GOOGLE_VISION_API_KEY`)
+- [ ] Endpoint `POST /api/ocr` : reçoit une image/PDF, retourne le texte extrait
+- [ ] Algorithme de parsing : extraire nom du produit, date d'achat, montant, magasin
+- [ ] Bouton "Scanner avec l'OCR" sur le formulaire produit (mode ajout)
 - [ ] Pré-remplir le formulaire Angular avec les données extraites
-- [ ] Prévoir un fallback manuel si l'OCR échoue
+- [ ] Fallback : si l'OCR ne trouve pas de donnée, laisser les champs vides (saisie manuelle)
 
-### Priorité 3 — Alertes email (Mai)
-- [ ] Installer `nodemailer` dans le backend
-- [ ] Configurer un compte SMTP (Gmail app password ou Mailtrap pour les tests)
-- [ ] Job planifié (`@nestjs/schedule` + `@Cron`) : vérification quotidienne des garanties
-- [ ] Envoyer un email 30 jours avant expiration (une seule fois par produit)
-- [ ] Ajouter un champ `alert_sent_at` dans la table `products` pour éviter les doublons
+### Priorité 2 — Alertes email (Mai)
+- [ ] Installer `nodemailer` + `@nestjs/schedule` dans le backend
+- [ ] Configurer SMTP (variable `SMTP_*` dans `.env`)
+- [ ] Ajouter colonne `alert_sent_at` dans la table `products` (migration 003)
+- [ ] Job `@Cron` quotidien : détecte les garanties expirant dans 30 jours
+- [ ] Envoyer l'email d'alerte (une seule fois par produit via `alert_sent_at`)
+- [ ] Template HTML de l'email
 
-### Priorité 4 — UI/UX & polish (Mai)
-- [ ] Page détail produit (`/products/:id`)
+### Priorité 3 — UI/UX & polish (Mai)
+- [ ] Page détail produit (`/products/:id`) avec liste des factures intégrée
 - [ ] Filtre par catégorie et tri sur le dashboard
-- [ ] Formulaire : validation visuelle plus claire, champs optionnels masquables
+- [ ] Messages toast (confirmation après ajout / modification / suppression)
 - [ ] Responsive mobile (media queries)
-- [ ] Messages de confirmation (toast) après ajout / suppression
+- [ ] Indicateur de facture jointe dans la table du dashboard (icône 📎)
 
-### Priorité 5 — Déploiement (Juin)
+### Priorité 4 — Déploiement (Juin)
 - [ ] Déployer le frontend Angular sur Vercel
 - [ ] Déployer le backend NestJS sur Railway ou Render (gratuit)
 - [ ] Variables d'environnement de production configurées
