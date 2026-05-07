@@ -21,6 +21,14 @@
 
 ### Séance du 07/05/2026
 
+#### OCR Google Vision API
+- `OcrModule` / `OcrService` / `OcrController` : endpoint `POST /api/ocr` protégé JWT
+- Appel REST direct à Vision API (images:annotate pour JPEG/PNG/WEBP, files:annotate pour PDF)
+- Parser texte : extraction date d'achat, prix, magasin, nom produit
+- Angular `OcrService` + bouton "Scanner la facture" sur le formulaire produit
+- Pré-remplissage automatique des champs name / purchaseDate / price / store
+- Fallback : champs vides si OCR ne trouve pas la donnée (saisie manuelle)
+
 #### Upload de factures
 - Table SQL `invoices` avec RLS (liée à `products` et `auth.users`)
 - Bucket Supabase Storage `invoices` (privé, 10 Mo max, PDF/JPEG/PNG/WEBP) avec policies par `user_id`
@@ -37,15 +45,9 @@
 
 ## Ce qu'il faut faire ensuite
 
-### Priorité 1 — OCR Google Vision API ← À FAIRE MAINTENANT
-- [ ] Ajouter `@google-cloud/vision` dans le backend (utiliser la clé `GOOGLE_VISION_API_KEY`)
-- [ ] Endpoint `POST /api/ocr` : reçoit une image/PDF, retourne le texte extrait
-- [ ] Algorithme de parsing : extraire nom du produit, date d'achat, montant, magasin
-- [ ] Bouton "Scanner avec l'OCR" sur le formulaire produit (mode ajout)
-- [ ] Pré-remplir le formulaire Angular avec les données extraites
-- [ ] Fallback : si l'OCR ne trouve pas de donnée, laisser les champs vides (saisie manuelle)
+### ~~Priorité 1 — OCR Google Vision API~~ ✅ TERMINÉ
 
-### Priorité 2 — Alertes email (Mai)
+### Priorité 1 — Alertes email (Mai)
 - [ ] Installer `nodemailer` + `@nestjs/schedule` dans le backend
 - [ ] Configurer SMTP (variable `SMTP_*` dans `.env`)
 - [ ] Ajouter colonne `alert_sent_at` dans la table `products` (migration 003)
