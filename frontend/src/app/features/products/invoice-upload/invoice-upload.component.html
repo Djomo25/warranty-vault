@@ -1,0 +1,74 @@
+<div class="invoices-section">
+  <h3 class="section-title">Factures &amp; justificatifs</h3>
+
+  <!-- Zone de dépôt -->
+  <div
+    class="upload-zone"
+    [class.upload-zone--drag]="dragging()"
+    (click)="fileInput.click()"
+    (dragover)="onDragOver($event)"
+    (dragleave)="onDragLeave()"
+    (drop)="onDrop($event)"
+    role="button"
+    tabindex="0"
+  >
+    <input
+      #fileInput
+      type="file"
+      accept=".pdf,.jpg,.jpeg,.png,.webp"
+      (change)="onFileChange($event)"
+      hidden
+    />
+    <span class="upload-zone__icon">📎</span>
+    <span class="upload-zone__label">
+      Glisser un fichier ici ou <strong>cliquer pour sélectionner</strong>
+    </span>
+    <span class="upload-zone__hint">PDF, JPEG, PNG, WEBP — max 10 Mo</span>
+  </div>
+
+  @if (uploading()) {
+    <p class="upload-status">
+      <span class="spinner"></span> Envoi en cours…
+    </p>
+  }
+
+  @if (uploadError()) {
+    <p class="alert-error">{{ uploadError() }}</p>
+  }
+
+  <!-- Liste des factures -->
+  @if (invoices().length > 0) {
+    <ul class="invoice-list">
+      @for (inv of invoices(); track inv.id) {
+        <li class="invoice-item">
+
+          <!-- Prévisualisation -->
+          <a [href]="inv.url" target="_blank" class="invoice-preview" [title]="inv.file_name">
+            @if (isImage(inv.mime_type)) {
+              <img [src]="inv.url" [alt]="inv.file_name" class="invoice-thumb" />
+            } @else {
+              <span class="invoice-pdf-icon">📄</span>
+            }
+          </a>
+
+          <!-- Infos -->
+          <div class="invoice-info">
+            <a [href]="inv.url" target="_blank" class="invoice-name">{{ inv.file_name }}</a>
+            <span class="invoice-meta">{{ formatSize(inv.file_size) }}</span>
+          </div>
+
+          <!-- Supprimer -->
+          <button
+            class="btn-icon btn-danger"
+            (click)="delete(inv)"
+            [disabled]="deletingId() === inv.id"
+            title="Supprimer"
+          >🗑️</button>
+
+        </li>
+      }
+    </ul>
+  } @else if (!uploading()) {
+    <p class="invoice-empty">Aucune facture jointe pour ce produit.</p>
+  }
+</div>

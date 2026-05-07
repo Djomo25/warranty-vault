@@ -4,11 +4,12 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { ProductsService } from '../../../core/services/products.service';
 import { CATEGORIES } from '../../../core/models/product.model';
+import { InvoiceUploadComponent } from '../invoice-upload/invoice-upload.component';
 
 @Component({
   selector: 'app-product-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, InvoiceUploadComponent],
   templateUrl: './product-form.component.html',
 })
 export class ProductFormComponent implements OnInit {

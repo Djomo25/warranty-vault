@@ -141,6 +141,73 @@ select {
 
 .form-actions { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--color-border); }
 
+/* Invoice upload panel */
+.invoice-panel {
+  margin-top: 1.5rem;
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+}
+
+.invoices-section { display: flex; flex-direction: column; gap: 1rem; }
+
+.upload-zone {
+  border: 2px dashed var(--color-border); border-radius: var(--radius);
+  padding: 1.75rem 1rem; display: flex; flex-direction: column; align-items: center;
+  gap: 0.375rem; cursor: pointer; transition: border-color 0.15s, background 0.15s; text-align: center;
+
+  &:hover, &--drag {
+    border-color: var(--color-primary); background: #eff6ff;
+  }
+
+  &__icon { font-size: 1.75rem; }
+  &__label { font-size: 0.9375rem; color: var(--color-text); }
+  &__hint  { font-size: 0.8125rem; color: var(--color-muted); }
+}
+
+.upload-status {
+  display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: var(--color-muted);
+}
+
+.spinner {
+  width: 14px; height: 14px; border: 2px solid var(--color-border);
+  border-top-color: var(--color-primary); border-radius: 50%;
+  animation: spin 0.7s linear infinite; display: inline-block; flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.invoice-list { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; }
+
+.invoice-item {
+  display: flex; align-items: center; gap: 0.875rem;
+  padding: 0.625rem 0.75rem; border: 1px solid var(--color-border);
+  border-radius: var(--radius); background: var(--color-bg);
+}
+
+.invoice-preview { flex-shrink: 0; display: flex; align-items: center; }
+
+.invoice-thumb {
+  width: 48px; height: 48px; object-fit: cover; border-radius: 4px;
+  border: 1px solid var(--color-border);
+}
+
+.invoice-pdf-icon { font-size: 2rem; line-height: 1; }
+
+.invoice-info {
+  flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.125rem;
+}
+
+.invoice-name {
+  font-size: 0.875rem; font-weight: 500; color: var(--color-primary);
+  text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  &:hover { text-decoration: underline; }
+}
+
+.invoice-meta { font-size: 0.75rem; color: var(--color-muted); }
+
+.invoice-empty { font-size: 0.875rem; color: var(--color-muted); text-align: center; padding: 1rem 0; }
+
 /* Auth pages */
 .auth-container {
   min-height: 100vh;

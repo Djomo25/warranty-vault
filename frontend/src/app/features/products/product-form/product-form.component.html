@@ -48,7 +48,7 @@
 
       <!-- Garantie et achat -->
       <div class="form-section">
-        <h3 class="section-title">Garantie & Achat</h3>
+        <h3 class="section-title">Garantie &amp; Achat</h3>
 
         <div class="form-row">
           <div class="form-group">
@@ -97,4 +97,11 @@
     </div>
 
   </form>
+
+  <!-- Section factures : visible uniquement en mode édition -->
+  @if (isEdit && editId()) {
+    <div class="invoice-panel">
+      <app-invoice-upload [productId]="editId()!" />
+    </div>
+  }
 </div>
