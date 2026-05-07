@@ -1,10 +1,11 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { ProductsService } from '../../../core/services/products.service';
 import { CATEGORIES } from '../../../core/models/product.model';
 import { InvoiceUploadComponent } from '../invoice-upload/invoice-upload.component';
+import { OcrService } from '../../../core/services/ocr.service';
 
 @Component({
   selector: 'app-product-form',
@@ -17,11 +18,16 @@ export class ProductFormComponent implements OnInit {
   private productsService = inject(ProductsService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private ocrService = inject(OcrService);
+
+  @ViewChild('ocrInput') ocrInput!: ElementRef<HTMLInputElement>;
 
   categories = CATEGORIES;
   editId = signal<string | null>(null);
   loading = signal(false);
   error = signal('');
+  ocrLoading = signal(false);
+  ocrError = signal('');
 
   form = this.fb.group({
     name: ['', [Validators.required, Validators.minLength(2)]],
@@ -58,6 +64,36 @@ export class ProductFormComponent implements OnInit {
         error: () => this.router.navigate(['/dashboard']),
       });
     }
+  }
+
+  triggerOcrInput() {
+    this.ocrInput.nativeElement.click();
+  }
+
+  onOcrFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    input.value = '';
+
+    this.ocrLoading.set(true);
+    this.ocrError.set('');
+
+    this.ocrService.scan(file).subscribe({
+      next: (result) => {
+        this.ocrLoading.set(false);
+        const patch: Record<string, any> = {};
+        if (result.name) patch['name'] = result.name;
+        if (result.purchaseDate) patch['purchaseDate'] = result.purchaseDate;
+        if (result.price != null) patch['price'] = result.price;
+        if (result.store) patch['store'] = result.store;
+        this.form.patchValue(patch);
+      },
+      error: (err) => {
+        this.ocrLoading.set(false);
+        this.ocrError.set(err?.error?.message ?? "Erreur lors de l'analyse OCR");
+      },
+    });
   }
 
   submit() {

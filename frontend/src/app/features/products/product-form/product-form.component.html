@@ -4,6 +4,28 @@
     <h2>{{ isEdit ? 'Modifier le produit' : 'Ajouter un produit' }}</h2>
   </div>
 
+  <!-- Bouton OCR : disponible en mode ajout ET édition -->
+  <div class="ocr-bar">
+    <input
+      #ocrInput
+      type="file"
+      accept="image/jpeg,image/png,image/webp,application/pdf"
+      style="display:none"
+      (change)="onOcrFileSelected($event)"
+    />
+    <button type="button" class="btn-ocr" (click)="triggerOcrInput()" [disabled]="ocrLoading()">
+      @if (ocrLoading()) {
+        <span class="spinner"></span> Analyse en cours…
+      } @else {
+        Scanner la facture
+      }
+    </button>
+    <span class="ocr-hint">Importez une photo ou un PDF de facture pour pré-remplir le formulaire</span>
+    @if (ocrError()) {
+      <span class="ocr-error">{{ ocrError() }}</span>
+    }
+  </div>
+
   <form [formGroup]="form" (ngSubmit)="submit()" class="product-form" novalidate>
 
     <div class="form-grid">
