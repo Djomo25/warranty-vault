@@ -39,34 +39,85 @@
 - `InvoiceUploadComponent` Angular : drag-and-drop, click-to-browse, prévisualisation image/PDF
 - Validation format + taille côté client ET backend
 - Intégré dans la fiche produit (mode édition uniquement)
-- Clé Google Vision API configurée dans `.env` ✅
+
+### Séance du 25/05/2026
+
+#### Dashboard amélioré
+- Barre de recherche (nom, marque, modèle) + filtre par catégorie — computed signals
+- Lignes de la table cliquables → `/products/:id` (stopPropagation sur les actions)
+- État "aucun résultat" avec bouton reset des filtres
+
+#### Page détail produit (`/products/:id`)
+- `ProductDetailComponent` : bandeau statut coloré, grille infos/garantie, notes
+- Section factures intégrée (upload + liste)
+- Bouton Modifier → `/products/:id/edit`
+
+#### Alertes email
+- Table SQL `alerts` (product_id, user_id, alert_type, sent_at) avec RLS — migration 003
+- `AlertsModule` / `AlertsService` / `AlertsController`
+- Cron `@8h00` (Europe/Brussels) : produits expirant dans ≤ 30 jours
+- Déduplication : alerte ignorée si déjà envoyée dans les 25 derniers jours
+- Email HTML responsive (carte produit, badge expiration, lien fiche)
+- SMTP configuré via `SMTP_HOST/PORT/USER/PASS/FROM` dans `.env`
+- `POST /api/alerts/trigger` (JWT) pour déclencher manuellement
+- Testé : `{ sent: 2, skipped: 0 }` ✅ — emails reçus sur nicolas.djomo@yahoo.com
+
+#### Revue qualité & corrections
+- `error.interceptor.ts` : 401 hors `/auth/` → logout + redirect login automatique
+- Locale française enregistrée (`registerLocaleData`) — CurrencyPipe `| currency:'fr'` fonctionnel
+- `.btn-primary` : `inline-flex` par défaut, `width: 100%` scopé aux pages auth uniquement
+- `Validators.min(0)` sur le champ prix du formulaire produit
+- Gestion d'erreur sur le chargement initial des factures
 
 ---
 
 ## Ce qu'il faut faire ensuite
 
-### ~~Priorité 1 — OCR Google Vision API~~ ✅ TERMINÉ
+### Priorité 1 — Déploiement (Juin)
 
-### Priorité 1 — Alertes email (Mai)
-- [ ] Installer `nodemailer` + `@nestjs/schedule` dans le backend
-- [ ] Configurer SMTP (variable `SMTP_*` dans `.env`)
-- [ ] Ajouter colonne `alert_sent_at` dans la table `products` (migration 003)
-- [ ] Job `@Cron` quotidien : détecte les garanties expirant dans 30 jours
-- [ ] Envoyer l'email d'alerte (une seule fois par produit via `alert_sent_at`)
-- [ ] Template HTML de l'email
+#### Frontend → Vercel
+- [ ] `ng build --configuration production` et vérifier que le build passe
+- [ ] Créer un projet Vercel, connecter le repo GitHub (`warranty-vault`)
+- [ ] Répertoire racine : `frontend/`, commande de build : `npm run build`, output : `dist/frontend/browser`
+- [ ] Ajouter les variables d'environnement Vercel :
+  - `SUPABASE_URL`, `SUPABASE_ANON_KEY` (visibles côté client, anon key uniquement)
+- [ ] Mettre à jour `environment.prod.ts` avec les vraies valeurs (ou via `fileReplacements`)
+- [ ] Configurer le rewrite Vercel pour SPA : `{ "source": "/(.*)", "destination": "/index.html" }`
+- [ ] Tester le flux complet en ligne
 
-### Priorité 3 — UI/UX & polish (Mai)
-- [ ] Page détail produit (`/products/:id`) avec liste des factures intégrée
-- [ ] Filtre par catégorie et tri sur le dashboard
+#### Backend → Railway (recommandé) ou Render
+- [ ] Créer un `Dockerfile` dans `backend/` (image Node 22-alpine, `npm run build`, `node dist/main`)
+- [ ] Pousser sur Railway : connecter repo, répertoire `backend/`
+- [ ] Variables d'environnement Railway (copier depuis `.env`, sauf `PORT` géré par Railway) :
+  - `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
+  - `JWT_SECRET`, `GOOGLE_VISION_API_KEY`
+  - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`
+  - `FRONTEND_URL` = URL Vercel de production
+- [ ] Mettre à jour `FRONTEND_URL` dans Railway après déploiement Vercel (CORS)
+- [ ] Tester `POST /api/auth/login` sur l'URL Railway depuis Postman
+
+#### Validation déploiement
+- [ ] Connexion / inscription depuis l'URL Vercel
+- [ ] Ajout d'un produit, upload d'une facture, scan OCR
+- [ ] Vérifier que le cron 8h00 tourne en production (Railway logs)
+
+### Priorité 2 — Finalisation TFE (avant le 25 juin 2026)
+
+#### Polish UI restant
 - [ ] Messages toast (confirmation après ajout / modification / suppression)
-- [ ] Responsive mobile (media queries)
-- [ ] Indicateur de facture jointe dans la table du dashboard (icône 📎)
+- [ ] Responsive mobile complet (media queries sur dashboard et formulaire)
+- [ ] Indicateur facture jointe (icône 📎) dans la colonne produit du dashboard
 
-### Priorité 4 — Déploiement (Juin)
-- [ ] Déployer le frontend Angular sur Vercel
-- [ ] Déployer le backend NestJS sur Railway ou Render (gratuit)
-- [ ] Variables d'environnement de production configurées
-- [ ] Tester le flux complet en ligne avec de vraies données
+#### Rapport TFE
+- [ ] Captures d'écran de l'application en production pour le rapport
+- [ ] Schéma d'architecture (Angular → NestJS → Supabase + Storage + Auth)
+- [ ] Documenter les choix techniques (JWT, RLS, OCR, cron alertes)
+- [ ] Section "difficultés rencontrées" : fix JwtModule.registerAsync, immutabilité PostgreSQL, auth guard synchrone, transporter nodemailer lazy
+
+#### Présentation (25 juin 2026)
+- [ ] Démo live sur l'URL de production
+- [ ] Préparer un jeu de données de démonstration (3-4 produits avec factures, 1 qui expire bientôt)
+- [ ] Slide : fonctionnalités clés, architecture, technologies
 
 ---
 
