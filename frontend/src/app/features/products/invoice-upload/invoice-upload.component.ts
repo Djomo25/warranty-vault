@@ -29,6 +29,7 @@ export class InvoiceUploadComponent implements OnInit {
   ngOnInit() {
     this.invoicesService.getByProduct(this.productId).subscribe({
       next: (list) => this.invoices.set(list),
+      error: () => this.uploadError.set('Impossible de charger les factures.'),
     });
   }
 

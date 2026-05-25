@@ -37,7 +37,7 @@ export class ProductFormComponent implements OnInit {
     category: ['Autre', Validators.required],
     purchaseDate: ['', Validators.required],
     warrantyMonths: [12, [Validators.required, Validators.min(1)]],
-    price: [null as number | null],
+    price: [null as number | null, Validators.min(0)],
     store: [''],
     notes: [''],
   });
