@@ -1,0 +1,81 @@
+<div class="page-container">
+
+  @if (loading()) {
+    <div class="state-placeholder">Chargement…</div>
+  } @else if (product(); as p) {
+
+    <div class="page-header">
+      <a routerLink="/dashboard" class="back-link">← Retour</a>
+      <h2>{{ p.name }}</h2>
+      <a [routerLink]="['/products', p.id, 'edit']" class="btn-secondary">Modifier</a>
+    </div>
+
+    <!-- Bandeau statut -->
+    <div class="detail-status-bar status-bar--{{ statusClass }}">
+      <span class="status-badge status-{{ statusClass }}">{{ statusLabel }}</span>
+      <span class="detail-warranty-end">Fin de garantie : {{ p.warranty_end | date:'dd/MM/yyyy' }}</span>
+    </div>
+
+    <!-- Grille info -->
+    <div class="detail-grid">
+      <div class="detail-card">
+        <h3 class="section-title">Informations produit</h3>
+        <dl class="detail-list">
+          @if (p.brand) {
+            <div class="detail-row"><dt>Marque</dt><dd>{{ p.brand }}</dd></div>
+          }
+          @if (p.model) {
+            <div class="detail-row"><dt>Modèle</dt><dd>{{ p.model }}</dd></div>
+          }
+          <div class="detail-row">
+            <dt>Catégorie</dt>
+            <dd><span class="category-tag">{{ p.category }}</span></dd>
+          </div>
+          @if (p.serial_number) {
+            <div class="detail-row"><dt>Numéro de série</dt><dd>{{ p.serial_number }}</dd></div>
+          }
+        </dl>
+      </div>
+
+      <div class="detail-card">
+        <h3 class="section-title">Garantie &amp; Achat</h3>
+        <dl class="detail-list">
+          <div class="detail-row">
+            <dt>Date d'achat</dt>
+            <dd>{{ p.purchase_date | date:'dd/MM/yyyy' }}</dd>
+          </div>
+          <div class="detail-row">
+            <dt>Durée garantie</dt>
+            <dd>{{ p.warranty_months }} mois</dd>
+          </div>
+          <div class="detail-row">
+            <dt>Fin de garantie</dt>
+            <dd>{{ p.warranty_end | date:'dd/MM/yyyy' }}</dd>
+          </div>
+          @if (p.price != null) {
+            <div class="detail-row">
+              <dt>Prix d'achat</dt>
+              <dd>{{ p.price | currency:'EUR':'symbol':'1.2-2':'fr' }}</dd>
+            </div>
+          }
+          @if (p.store) {
+            <div class="detail-row"><dt>Magasin</dt><dd>{{ p.store }}</dd></div>
+          }
+        </dl>
+      </div>
+    </div>
+
+    @if (p.notes) {
+      <div class="detail-card detail-card--full">
+        <h3 class="section-title">Notes</h3>
+        <p class="detail-notes">{{ p.notes }}</p>
+      </div>
+    }
+
+    <!-- Factures -->
+    <div class="invoice-panel">
+      <app-invoice-upload [productId]="p.id" />
+    </div>
+
+  }
+</div>

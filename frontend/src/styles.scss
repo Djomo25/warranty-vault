@@ -141,6 +141,64 @@ select {
 
 .form-actions { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--color-border); }
 
+/* List controls (search + filter) */
+.list-controls {
+  display: flex; gap: 0.75rem; margin-bottom: 1rem; flex-wrap: wrap;
+}
+
+.search-input {
+  flex: 1; min-width: 200px; padding: 0.6rem 0.875rem;
+  border: 1px solid var(--color-border); border-radius: var(--radius);
+  font-size: 0.9rem; outline: none; background: #fff;
+  &:focus { border-color: var(--color-primary); }
+}
+
+.filter-select {
+  width: auto; min-width: 180px; padding: 0.6rem 0.875rem;
+  border: 1px solid var(--color-border); border-radius: var(--radius);
+  font-size: 0.9rem; outline: none; background: #fff;
+  &:focus { border-color: var(--color-primary); }
+}
+
+/* Clickable product row */
+.product-row {
+  cursor: pointer;
+  td { transition: background 0.1s; }
+  &:hover td { background: #eff6ff; }
+}
+
+/* Product detail page */
+.detail-status-bar {
+  display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+  padding: 0.875rem 1.25rem; border-radius: var(--radius); margin-bottom: 1.25rem;
+  border: 1px solid var(--color-border); background: var(--color-bg);
+}
+.status-bar--active   { background: #f0fdf4; border-color: #bbf7d0; }
+.status-bar--expiring { background: #fffbeb; border-color: #fde68a; }
+.status-bar--expired  { background: #fef2f2; border-color: #fecaca; }
+.detail-warranty-end  { font-size: 0.875rem; color: var(--color-muted); }
+
+.detail-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;
+}
+@media (max-width: 640px) { .detail-grid { grid-template-columns: 1fr; } }
+
+.detail-card {
+  background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius); padding: 1.25rem;
+  &--full { grid-column: 1 / -1; }
+}
+
+.detail-list { display: flex; flex-direction: column; gap: 0.75rem; }
+
+.detail-row {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 0.5rem; font-size: 0.9rem;
+  dt { color: var(--color-muted); flex-shrink: 0; }
+  dd { font-weight: 500; text-align: right; }
+}
+
+.detail-notes { font-size: 0.9rem; color: var(--color-text); line-height: 1.6; white-space: pre-wrap; }
+
 /* OCR scanner bar */
 .ocr-bar {
   display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;

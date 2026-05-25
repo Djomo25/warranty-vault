@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { ProductsService } from '../../core/services/products.service';
-import { Product, getWarrantyStatus, getDaysRemaining, WarrantyStatus } from '../../core/models/product.model';
+import { Product, CATEGORIES, getWarrantyStatus, getDaysRemaining, WarrantyStatus } from '../../core/models/product.model';
 
 @Component({
   selector: 'app-dashboard',
@@ -20,6 +20,11 @@ export class DashboardComponent implements OnInit {
   error = signal('');
   deletingId = signal<string | null>(null);
 
+  searchQuery = signal('');
+  categoryFilter = signal('');
+
+  readonly allCategories = CATEGORIES;
+
   stats = computed(() => {
     const all = this.products();
     return {
@@ -28,6 +33,23 @@ export class DashboardComponent implements OnInit {
       expiring: all.filter(p => getWarrantyStatus(p.warranty_end) === 'expiring').length,
       expired: all.filter(p => getWarrantyStatus(p.warranty_end) === 'expired').length,
     };
+  });
+
+  filteredProducts = computed(() => {
+    let list = this.products();
+    const q = this.searchQuery().toLowerCase().trim();
+    const cat = this.categoryFilter();
+    if (q) {
+      list = list.filter(p =>
+        p.name.toLowerCase().includes(q) ||
+        (p.brand ?? '').toLowerCase().includes(q) ||
+        (p.model ?? '').toLowerCase().includes(q),
+      );
+    }
+    if (cat) {
+      list = list.filter(p => p.category === cat);
+    }
+    return list;
   });
 
   ngOnInit() {
@@ -42,7 +64,8 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  delete(id: string) {
+  delete(id: string, event: Event) {
+    event.stopPropagation();
     if (!confirm('Supprimer ce produit ?')) return;
     this.deletingId.set(id);
     this.productsService.delete(id).subscribe({
@@ -54,12 +77,16 @@ export class DashboardComponent implements OnInit {
     });
   }
 
+  stopProp(event: Event) {
+    event.stopPropagation();
+  }
+
   statusLabel(warrantyEnd: string): string {
     const days = getDaysRemaining(warrantyEnd);
     if (days < 0) return 'Expirée';
-    if (days === 0) return 'Expire aujourd\'hui';
+    if (days === 0) return "Expire aujourd'hui";
     if (days <= 30) return `Expire dans ${days}j`;
-    return `${days} jours restants`;
+    return `${days}j restants`;
   }
 
   statusClass(warrantyEnd: string): WarrantyStatus {

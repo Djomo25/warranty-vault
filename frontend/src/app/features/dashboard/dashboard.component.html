@@ -30,10 +30,31 @@
       </div>
     </div>
 
-    <!-- Header liste -->
+    <!-- Header liste + bouton ajout -->
     <div class="list-header">
       <h2 class="list-title">Mes garanties</h2>
       <a routerLink="/products/new" class="btn-primary">+ Ajouter un produit</a>
+    </div>
+
+    <!-- Barre de recherche + filtre catégorie -->
+    <div class="list-controls">
+      <input
+        class="search-input"
+        type="search"
+        placeholder="Rechercher par nom, marque ou modèle…"
+        [value]="searchQuery()"
+        (input)="searchQuery.set($any($event.target).value)"
+      />
+      <select
+        class="filter-select"
+        [value]="categoryFilter()"
+        (change)="categoryFilter.set($any($event.target).value)"
+      >
+        <option value="">Toutes les catégories</option>
+        @for (cat of allCategories; track cat) {
+          <option [value]="cat">{{ cat }}</option>
+        }
+      </select>
     </div>
 
     <!-- États -->
@@ -45,6 +66,13 @@
       <div class="empty-state">
         <p>Aucun produit enregistré.</p>
         <a routerLink="/products/new" class="btn-primary">Ajouter mon premier produit</a>
+      </div>
+    } @else if (filteredProducts().length === 0) {
+      <div class="empty-state">
+        <p>Aucun produit ne correspond à votre recherche.</p>
+        <button class="btn-secondary" (click)="searchQuery.set(''); categoryFilter.set('')">
+          Réinitialiser les filtres
+        </button>
       </div>
     } @else {
 
@@ -62,8 +90,12 @@
             </tr>
           </thead>
           <tbody>
-            @for (product of products(); track product.id) {
-              <tr>
+            @for (product of filteredProducts(); track product.id) {
+              <tr
+                class="product-row"
+                [routerLink]="['/products', product.id]"
+                title="Voir la fiche"
+              >
                 <td>
                   <div class="product-name">{{ product.name }}</div>
                   @if (product.brand) {
@@ -80,11 +112,15 @@
                     {{ statusLabel(product.warranty_end) }}
                   </span>
                 </td>
-                <td class="actions-cell">
-                  <a [routerLink]="['/products', product.id, 'edit']" class="btn-icon" title="Modifier">✏️</a>
+                <td class="actions-cell" (click)="stopProp($event)">
+                  <a
+                    [routerLink]="['/products', product.id, 'edit']"
+                    class="btn-icon"
+                    title="Modifier"
+                  >✏️</a>
                   <button
-                    class="btn-icon btn-danger"
-                    (click)="delete(product.id)"
+                    class="btn-icon"
+                    (click)="delete(product.id, $event)"
                     [disabled]="deletingId() === product.id"
                     title="Supprimer"
                   >🗑️</button>
