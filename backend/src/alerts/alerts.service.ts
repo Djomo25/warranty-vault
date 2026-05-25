@@ -6,10 +6,11 @@ import * as nodemailer from 'nodemailer';
 @Injectable()
 export class AlertsService {
   private readonly logger = new Logger(AlertsService.name);
-  private readonly transporter: nodemailer.Transporter;
 
-  constructor(private readonly supabase: SupabaseService) {
-    this.transporter = nodemailer.createTransport({
+  constructor(private readonly supabase: SupabaseService) {}
+
+  private buildTransporter(): nodemailer.Transporter {
+    return nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: Number(process.env.SMTP_PORT ?? 587),
       secure: process.env.SMTP_PORT === '465',
@@ -108,6 +109,7 @@ export class AlertsService {
   }
 
   private async sendAlertEmail(to: string, product: any) {
+    const transporter = this.buildTransporter();
     const warrantyEnd = new Date(product.warranty_end);
     const daysLeft = Math.ceil(
       (warrantyEnd.getTime() - Date.now()) / (1000 * 60 * 60 * 24),
@@ -119,7 +121,7 @@ export class AlertsService {
     });
     const productUrl = `${process.env.FRONTEND_URL}/products/${product.id}`;
 
-    await this.transporter.sendMail({
+    await transporter.sendMail({
       from: process.env.SMTP_FROM ?? process.env.SMTP_USER,
       to,
       subject: `⚠️ Garantie "${product.name}" expire dans ${daysLeft} jour${daysLeft > 1 ? 's' : ''}`,
