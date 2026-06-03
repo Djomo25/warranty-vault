@@ -7,8 +7,15 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api');
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+  const frontendUrl = (process.env.FRONTEND_URL ?? 'http://localhost:4200').replace(/\/$/, '');
   app.enableCors({
-    origin: process.env.FRONTEND_URL ?? 'http://localhost:4200',
+    origin: (requestOrigin: string | undefined, callback: (err: Error | null, origin?: string | boolean) => void) => {
+      if (!requestOrigin || requestOrigin.replace(/\/$/, '') === frontendUrl) {
+        callback(null, frontendUrl);
+      } else {
+        callback(null, false);
+      }
+    },
     credentials: true,
   });
 
