@@ -1,7 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { SupabaseService } from '../supabase/supabase.service';
-import * as nodemailer from 'nodemailer';
+// import * as nodemailer from 'nodemailer'; // Remplacé par Resend : Railway bloque les connexions SMTP sortantes
+import { Resend } from 'resend';
 
 @Injectable()
 export class AlertsService {
@@ -9,27 +10,38 @@ export class AlertsService {
 
   constructor(private readonly supabase: SupabaseService) {}
 
-  private buildTransporter(): nodemailer.Transporter {
-    return nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT ?? 587),
-      secure: process.env.SMTP_PORT === '465',
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    });
-  }
+  // /** Crée un transporteur SMTP nodemailer à partir des variables d'environnement SMTP_*. */
+  // private buildTransporter(): nodemailer.Transporter {
+  //   return nodemailer.createTransport({
+  //     host: process.env.SMTP_HOST,
+  //     port: Number(process.env.SMTP_PORT ?? 587),
+  //     secure: process.env.SMTP_PORT === '465',
+  //     auth: {
+  //       user: process.env.SMTP_USER,
+  //       pass: process.env.SMTP_PASS,
+  //     },
+  //   });
+  // }
 
+  /** Tâche cron déclenchée chaque matin à 08h00 (Europe/Brussels) pour envoyer les alertes automatiques. */
   @Cron('0 8 * * *', { timeZone: 'Europe/Brussels' })
   async handleDailyAlerts() {
     this.logger.log('Cron alertes — vérification des garanties expirant bientôt…');
     await this.checkAndSendAlerts();
   }
 
+  /**
+   * Parcourt tous les produits dont la garantie expire dans les 30 prochains jours.
+   * Pour chacun, envoie un email d'alerte si aucun email n'a été envoyé dans les 25 derniers jours.
+   * Retourne le nombre d'emails envoyés et ignorés.
+   */
   async checkAndSendAlerts(): Promise<{ sent: number; skipped: number }> {
-    if (!process.env.SMTP_HOST || !process.env.SMTP_USER) {
-      this.logger.warn('SMTP non configuré — alertes désactivées. Renseignez SMTP_* dans .env.');
+    // if (!process.env.SMTP_HOST || !process.env.SMTP_USER) {
+    //   this.logger.warn('SMTP non configuré — alertes désactivées. Renseignez SMTP_* dans .env.');
+    //   return { sent: 0, skipped: 0 };
+    // }
+    if (!process.env.RESEND_API_KEY) {
+      this.logger.warn('RESEND_API_KEY non configurée — alertes désactivées.');
       return { sent: 0, skipped: 0 };
     }
 
@@ -61,6 +73,7 @@ export class AlertsService {
     const cutoff = new Date(today.getTime() - 25 * 24 * 60 * 60 * 1000).toISOString();
 
     for (const product of products) {
+      // Vérifie si un email a déjà été envoyé dans les 25 derniers jours pour ce produit
       const { data: existing } = await this.supabase
         .getAdminClient()
         .from('alerts')
@@ -108,8 +121,31 @@ export class AlertsService {
     return { sent, skipped };
   }
 
+  /** Compose et envoie un email d'alerte pour un produit dont la garantie expire bientôt. */
+  // /** Version nodemailer/SMTP — désactivée car Railway bloque les connexions SMTP sortantes. */
+  // private async sendAlertEmail(to: string, product: any) {
+  //   const transporter = this.buildTransporter();
+  //   const warrantyEnd = new Date(product.warranty_end);
+  //   const daysLeft = Math.ceil(
+  //     (warrantyEnd.getTime() - Date.now()) / (1000 * 60 * 60 * 24),
+  //   );
+  //   const formattedDate = warrantyEnd.toLocaleDateString('fr-FR', {
+  //     day: '2-digit',
+  //     month: 'long',
+  //     year: 'numeric',
+  //   });
+  //   const productUrl = `${process.env.FRONTEND_URL}/products/${product.id}`;
+  //   await transporter.sendMail({
+  //     from: process.env.SMTP_FROM ?? process.env.SMTP_USER,
+  //     to,
+  //     subject: `⚠️ Garantie "${product.name}" expire dans ${daysLeft} jour${daysLeft > 1 ? 's' : ''}`,
+  //     html: this.buildEmailHtml(product, daysLeft, formattedDate, productUrl),
+  //   });
+  // }
+
+  /** Version Resend (API HTTP) — remplace SMTP pour contourner le blocage Railway. */
   private async sendAlertEmail(to: string, product: any) {
-    const transporter = this.buildTransporter();
+    const resend = new Resend(process.env.RESEND_API_KEY);
     const warrantyEnd = new Date(product.warranty_end);
     const daysLeft = Math.ceil(
       (warrantyEnd.getTime() - Date.now()) / (1000 * 60 * 60 * 24),
@@ -121,14 +157,17 @@ export class AlertsService {
     });
     const productUrl = `${process.env.FRONTEND_URL}/products/${product.id}`;
 
-    await transporter.sendMail({
-      from: process.env.SMTP_FROM ?? process.env.SMTP_USER,
+    const { error } = await resend.emails.send({
+      from: 'WarrantyVault <onboarding@resend.dev>',
       to,
       subject: `⚠️ Garantie "${product.name}" expire dans ${daysLeft} jour${daysLeft > 1 ? 's' : ''}`,
       html: this.buildEmailHtml(product, daysLeft, formattedDate, productUrl),
     });
+
+    if (error) throw new Error(error.message);
   }
 
+  /** Génère le corps HTML de l'email d'alerte avec les informations du produit et un bouton CTA. */
   private buildEmailHtml(
     product: any,
     daysLeft: number,
