@@ -125,7 +125,7 @@ export class OcrService {
   private extractPrice(text: string): number | null {
     const patterns = [
       /total\s*[:\s]+(\d+[,\.]\d{2})\s*€?/i,
-      /total\s+eur\s+(\d+[,\.]\d{2})/i,
+      /total\s+eur[^0-9]*(\d+[,\.]\d{2})/i,
       /(\d+[,\.]\d{2})\s*€/,
       /€\s*(\d+[,\.]\d{2})/,
       /(\d+[,\.]\d{2})\s*eur/i,
