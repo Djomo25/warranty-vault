@@ -124,11 +124,11 @@ export class OcrService {
   /** Cherche un montant en euros (ex : "Total : 149,99 €") et le convertit en nombre. */
   private extractPrice(text: string): number | null {
     const patterns = [
-      /total\s*[:\s]+(\d+[,\.]\d{2})\s*€?/i,
-      /total\s+eur[^0-9]*(\d+[,\.]\d{2})/i,
-      /(\d+[,\.]\d{2})\s*€/,
-      /€\s*(\d+[,\.]\d{2})/,
-      /(\d+[,\.]\d{2})\s*eur/i,
+      /total\s*[:\s]+(\d+(?:[,\.]\d{1,2})?)\s*€?/i,
+      /total\s+eur[^0-9]*(\d+(?:[,\.]\d{1,2})?)/i,
+      /(\d+(?:[,\.]\d{1,2})?)\s*€/,
+      /€\s*(\d+(?:[,\.]\d{1,2})?)/,
+      /(\d+(?:[,\.]\d{1,2})?)\s*eur/i,
     ];
     for (const pat of patterns) {
       const m = text.match(pat);
@@ -157,7 +157,7 @@ export class OcrService {
   /** Cherche le nom du produit parmi les premières lignes en ignorant totaux, TVA, dates et montants. */
   private extractProductName(lines: string[]): string | null {
     const knownStorePattern = new RegExp(this.KNOWN_STORES.join('|'), 'i');
-    const skip = [/total/i, /tva/i, /\bttc\b/i, /\bht\b/i, /siret/i, /tel:/i, /adresse/i, /facture/i, /ticket/i, /docks/i, /\d{3,5}\s*,?\s*\d{4}/, /brussels|bruxelles|belgium|belgi/i, /straat|laan|rue |avenue|boulevard/i, knownStorePattern];
+    const skip = [/total/i, /tva/i, /\bttc\b/i, /\bht\b/i, /siret/i, /tel:/i, /adresse/i, /facture/i, /ticket/i, /docks/i, /\d{3,5}\s*,?\s*\d{4}/, /brussels|bruxelles|belgium|belgi/i, /straat|laan|rue |avenue|boulevard/i, /paiement|commande|transaction|bancaire|quantit|montant|article|num[eé]ro|moyen|date\s+de|merci|copyright|droits/i, knownStorePattern];
     for (let i = 1; i < Math.min(lines.length, 15); i++) {
       const line = lines[i];
       if (line.length < 5 || line.length > 100) continue;
